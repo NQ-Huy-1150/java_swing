@@ -1,10 +1,9 @@
 package com.java_swing_project.main.java.domain;
 
-public class ticket {
+public class booking {
     private long id;
     private long serviceId;
     private long roomId;
-    private long petId;
     private String createTime;
     private String endTime;
 
@@ -32,13 +31,6 @@ public class ticket {
         this.roomId = roomId;
     }
 
-    public long getPetId() {
-        return petId;
-    }
-
-    public void setPetId(long petId) {
-        this.petId = petId;
-    }
 
     public String getCreateTime() {
         return createTime;
@@ -62,7 +54,6 @@ public class ticket {
                 "id=" + id +
                 ", serviceId=" + serviceId +
                 ", roomId=" + roomId +
-                ", petId=" + petId +
                 ", createTime='" + createTime + '\'' +
                 ", endTime='" + endTime + '\'' +
                 '}';
