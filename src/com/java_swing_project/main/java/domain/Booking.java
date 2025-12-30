@@ -1,6 +1,6 @@
 package com.java_swing_project.main.java.domain;
 
-public class booking {
+public class Booking {
     private long id;
     private long serviceId;
     private long roomId;
