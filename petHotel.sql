@@ -1,189 +1,118 @@
--- MySQL dump 10.13  Distrib 8.0.44, for Win64 (x86_64)
---
--- Host: localhost    Database: pet_hotel
--- ------------------------------------------------------
--- Server version	8.0.44
+USE master;
+GO
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!50503 SET NAMES utf8 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+-- 1. Tạo Database (Nếu chưa có)
+IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'pet_hotel')
+BEGIN
+    CREATE DATABASE [pet_hotel];
+END
+GO
 
---
--- Table structure for table `booking`
---
+USE [pet_hotel];
+GO
 
-DROP TABLE IF EXISTS `booking`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `booking` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `service_id` bigint DEFAULT NULL,
-  `room_id` bigint DEFAULT NULL,
-  `pet_id` bigint DEFAULT NULL,
-  `createTime` datetime DEFAULT NULL,
-  `endTime` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `room_fk_idx` (`room_id`),
-  KEY `service_fk_idx` (`service_id`),
-  KEY `FK_PET_TICKET_idx` (`pet_id`),
-  CONSTRAINT `FK_PET_TICKET` FOREIGN KEY (`pet_id`) REFERENCES `pets` (`id`),
-  CONSTRAINT `room_fk` FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`),
-  CONSTRAINT `service_fk` FOREIGN KEY (`service_id`) REFERENCES `services` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+-- 2. Xóa các bảng cũ nếu tồn tại (theo thứ tự khóa ngoại để tránh lỗi)
+IF OBJECT_ID('dbo.invoices', 'U') IS NOT NULL DROP TABLE dbo.invoices;
+IF OBJECT_ID('dbo.booking', 'U') IS NOT NULL DROP TABLE dbo.booking;
+IF OBJECT_ID('dbo.pets', 'U') IS NOT NULL DROP TABLE dbo.pets;
+IF OBJECT_ID('dbo.services', 'U') IS NOT NULL DROP TABLE dbo.services;
+IF OBJECT_ID('dbo.rooms', 'U') IS NOT NULL DROP TABLE dbo.rooms;
+IF OBJECT_ID('dbo.customers', 'U') IS NOT NULL DROP TABLE dbo.customers;
+GO
 
---
--- Dumping data for table `booking`
---
+-- 3. Tạo bảng customers
+CREATE TABLE [customers] (
+    [id] bigint IDENTITY(1,1) NOT NULL,
+    [name] NVARCHAR(255) NULL,
+    [phoneNumber] VARCHAR(20) NULL, -- Số điện thoại không cần Nvarchar
+    PRIMARY KEY CLUSTERED ([id] ASC)
+    );
+GO
 
-LOCK TABLES `booking` WRITE;
-/*!40000 ALTER TABLE `booking` DISABLE KEYS */;
-/*!40000 ALTER TABLE `booking` ENABLE KEYS */;
-UNLOCK TABLES;
+-- 4. Tạo bảng rooms
+CREATE TABLE [rooms] (
+    [id] bigint IDENTITY(1,1) NOT NULL,
+    [name] NVARCHAR(255) NULL,
+    [status] NVARCHAR(255) NULL,
+    PRIMARY KEY CLUSTERED ([id] ASC)
+    );
+GO
 
---
--- Table structure for table `customers`
---
+-- 5. Tạo bảng services
+CREATE TABLE [services] (
+    [id] bigint IDENTITY(1,1) NOT NULL,
+    [name] NVARCHAR(255) NULL,
+    [description] NVARCHAR(MAX) NULL, -- Dùng MAX cho mô tả dài
+    [price] FLOAT NULL,
+    PRIMARY KEY CLUSTERED ([id] ASC)
+    );
+GO
 
-DROP TABLE IF EXISTS `customers`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `customers` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) DEFAULT NULL,
-  `phoneNumber` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+-- 6. Tạo bảng pets
+CREATE TABLE [pets] (
+    [id] bigint IDENTITY(1,1) NOT NULL,
+    [name] NVARCHAR(255) NULL,
+    [breeds] NVARCHAR(255) NULL,
+    [gender] NVARCHAR(50) NULL,
+    [healthStatus] NVARCHAR(255) NULL,
+    [customer_id] bigint NULL,
+    PRIMARY KEY CLUSTERED ([id] ASC),
+    CONSTRAINT [FK_pet_customer] FOREIGN KEY ([customer_id]) REFERENCES [customers] ([id])
+    );
+GO
 
---
--- Dumping data for table `customers`
---
+-- Tạo Index cho pets (SQL Server tách riêng index, không gộp trong Create Table như MySQL)
+CREATE INDEX [FK_pet_customer_idx] ON [pets] ([customer_id]);
+GO
 
-LOCK TABLES `customers` WRITE;
-/*!40000 ALTER TABLE `customers` DISABLE KEYS */;
-/*!40000 ALTER TABLE `customers` ENABLE KEYS */;
-UNLOCK TABLES;
+-- 7. Tạo bảng booking
+CREATE TABLE [booking] (
+    [id] bigint IDENTITY(1,1) NOT NULL,
+    [service_id] bigint NULL,
+    [room_id] bigint NULL,
+    [pet_id] bigint NULL,
+    [createTime] DATETIME NULL,
+    [endTime] DATETIME NULL,
+    PRIMARY KEY CLUSTERED ([id] ASC),
+    CONSTRAINT [FK_PET_TICKET] FOREIGN KEY ([pet_id]) REFERENCES [pets] ([id]),
+    CONSTRAINT [room_fk] FOREIGN KEY ([room_id]) REFERENCES [rooms] ([id]),
+    CONSTRAINT [service_fk] FOREIGN KEY ([service_id]) REFERENCES [services] ([id])
+    );
+GO
 
---
--- Table structure for table `invoices`
---
+-- Tạo Index cho booking
+CREATE INDEX [room_fk_idx] ON [booking] ([room_id]);
+CREATE INDEX [service_fk_idx] ON [booking] ([service_id]);
+CREATE INDEX [FK_PET_TICKET_idx] ON [booking] ([pet_id]);
+GO
 
-DROP TABLE IF EXISTS `invoices`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `invoices` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `ticket_id` bigint DEFAULT NULL,
-  `total` double DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `FK_INVOICE_TICKET_idx` (`ticket_id`),
-  CONSTRAINT `FK_INVOICE_TICKET` FOREIGN KEY (`ticket_id`) REFERENCES `booking` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+-- 8. Tạo bảng invoices
+CREATE TABLE [invoices] (
+    [id] bigint IDENTITY(1,1) NOT NULL,
+    [ticket_id] bigint NULL,
+    [total] FLOAT NULL,
+    PRIMARY KEY CLUSTERED ([id] ASC),
+    CONSTRAINT [FK_INVOICE_TICKET] FOREIGN KEY ([ticket_id]) REFERENCES [booking] ([id])
+    );
+GO
 
---
--- Dumping data for table `invoices`
---
+-- Tạo Index cho invoices
+CREATE INDEX [FK_INVOICE_TICKET_idx] ON [invoices] ([ticket_id]);
+GO
 
-LOCK TABLES `invoices` WRITE;
-/*!40000 ALTER TABLE `invoices` DISABLE KEYS */;
-/*!40000 ALTER TABLE `invoices` ENABLE KEYS */;
-UNLOCK TABLES;
+-- =============================================
+-- INSERT DỮ LIỆU
+-- =============================================
 
---
--- Table structure for table `pets`
---
+-- Insert dữ liệu bảng Services
+-- Vì cột id là IDENTITY, ta cần bật chế độ cho phép nhập ID thủ công
+SET IDENTITY_INSERT [services] ON;
 
-DROP TABLE IF EXISTS `pets`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `pets` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) DEFAULT NULL,
-  `breeds` varchar(255) DEFAULT NULL,
-  `gender` varchar(255) DEFAULT NULL,
-  `healthStatus` varchar(255) DEFAULT NULL,
-  `customer_id` bigint DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `FK_pet_customer_idx` (`customer_id`),
-  CONSTRAINT `FK_pet_customer` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+INSERT INTO [services] ([id], [name], [description], [price]) VALUES
+    (1, N'TAM_SAY_CO_BAN', N'tắm massage thư giãn – vắt tuyến hôi – sấy khô phồng lông.', 360000),
+    (2, N'COMBO_SPA_9', N'cắt – mài móng, cạo lông lòng bàn chân, cạo lông bụng – vùng vệ sinh, chải lông chết gỡ rối, vệ sinh tai lần 1, tắm massage thư giãn – vắt tuyến hôi, sấy khô – chải phồng lông, vệ sinh tai lần 2, thoa lotion dưỡng lông mềm mại.', 500000),
+    (3, N'CAT_TIA_TAO_KIEU', N'gồm combo spa 9 bước thơm tho và cắt tỉa – tạo kiểu theo yêu cầu hoặc theo hiện trạng lông của các bé', 999000);
 
---
--- Dumping data for table `pets`
---
-
-LOCK TABLES `pets` WRITE;
-/*!40000 ALTER TABLE `pets` DISABLE KEYS */;
-/*!40000 ALTER TABLE `pets` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `rooms`
---
-
-DROP TABLE IF EXISTS `rooms`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `rooms` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) DEFAULT NULL,
-  `status` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `rooms`
---
-
-LOCK TABLES `rooms` WRITE;
-/*!40000 ALTER TABLE `rooms` DISABLE KEYS */;
-/*!40000 ALTER TABLE `rooms` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `services`
---
-
-DROP TABLE IF EXISTS `services`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `services` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) DEFAULT NULL,
-  `description` varchar(255) DEFAULT NULL,
-  `price` double DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `services`
---
-
-LOCK TABLES `services` WRITE;
-/*!40000 ALTER TABLE `services` DISABLE KEYS */;
-INSERT INTO `services` VALUES (1,'TAM_SAY_CO_BAN','tắm massage thư giãn – vắt tuyến hôi – sấy khô phồng lông.',360000),(2,'COMBO_SPA_9','cắt – mài móng, cạo lông lòng bàn chân, cạo lông bụng – vùng vệ sinh, chải lông chết gỡ rối, vệ sinh tai lần 1, tắm massage thư giãn – vắt tuyến hôi, sấy khô – chải phồng lông, vệ sinh tai lần 2, thoa lotion dưỡng lông mềm mại.',500000),(3,'CAT_TIA_TAO_KIEU','gồm combo spa 9 bước thơm tho và cắt tỉa – tạo kiểu theo yêu cầu hoặc theo hiện trạng lông của các bé',999000);
-/*!40000 ALTER TABLE `services` ENABLE KEYS */;
-UNLOCK TABLES;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
-
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-
--- Dump completed on 2025-12-28 23:52:02
+-- Tắt chế độ nhập ID thủ công để hệ thống tự tăng cho các lần sau
+SET IDENTITY_INSERT [services] OFF;
+GO

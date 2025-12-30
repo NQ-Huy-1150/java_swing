@@ -1,6 +1,6 @@
 package com.java_swing_project.main.java.service;
 
-import com.java_swing_project.main.java.repository.JdbcRepository;
+import com.java_swing_project.main.java.repository.MssSQLConnection;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -8,14 +8,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class ConnectionTest {
-    private final JdbcRepository jdbcRepository;
+    private final MssSQLConnection mssSQLConnection;
 
     public ConnectionTest() {
-        jdbcRepository = new JdbcRepository();
+        mssSQLConnection = new MssSQLConnection();
 
-        String sql = "SELECT * FROM pet_hotel.customers;";
+        String sql = "SELECT * FROM dbo.customers;";
         try {
-            Connection connection = this.jdbcRepository.dbConnection();
+            Connection connection = this.mssSQLConnection.dbConnection();
             Statement statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(sql);
             while (rs.next()) {
