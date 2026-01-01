@@ -1,6 +1,6 @@
 USE [master]
 GO
-/****** Object:  Database [pet_hotel]    Script Date: 1/1/2026 9:01:04 PM ******/
+/****** Object:  Database [pet_hotel]    Script Date: 1/1/2026 9:14:28 PM ******/
 CREATE DATABASE [pet_hotel]
  CONTAINMENT = NONE
  ON  PRIMARY
@@ -84,7 +84,7 @@ ALTER DATABASE [pet_hotel] SET QUERY_STORE (OPERATION_MODE = READ_WRITE, CLEANUP
 GO
 USE [pet_hotel]
 GO
-/****** Object:  Table [dbo].[bookings]    Script Date: 1/1/2026 9:01:04 PM ******/
+/****** Object:  Table [dbo].[bookings]    Script Date: 1/1/2026 9:14:28 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -103,7 +103,7 @@ CREATE TABLE [dbo].[bookings](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
     ) ON [PRIMARY]
     GO
-/****** Object:  Table [dbo].[customers]    Script Date: 1/1/2026 9:01:04 PM ******/
+/****** Object:  Table [dbo].[customers]    Script Date: 1/1/2026 9:14:28 PM ******/
     SET ANSI_NULLS ON
     GO
     SET QUOTED_IDENTIFIER ON
@@ -118,7 +118,7 @@ CREATE TABLE [dbo].[customers](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
     ) ON [PRIMARY]
     GO
-/****** Object:  Table [dbo].[invoices]    Script Date: 1/1/2026 9:01:04 PM ******/
+/****** Object:  Table [dbo].[invoices]    Script Date: 1/1/2026 9:14:28 PM ******/
     SET ANSI_NULLS ON
     GO
     SET QUOTED_IDENTIFIER ON
@@ -133,7 +133,7 @@ CREATE TABLE [dbo].[invoices](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
     ) ON [PRIMARY]
     GO
-/****** Object:  Table [dbo].[pets]    Script Date: 1/1/2026 9:01:04 PM ******/
+/****** Object:  Table [dbo].[pets]    Script Date: 1/1/2026 9:14:28 PM ******/
     SET ANSI_NULLS ON
     GO
     SET QUOTED_IDENTIFIER ON
@@ -152,7 +152,7 @@ CREATE TABLE [dbo].[pets](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
     ) ON [PRIMARY]
     GO
-/****** Object:  Table [dbo].[rooms]    Script Date: 1/1/2026 9:01:04 PM ******/
+/****** Object:  Table [dbo].[rooms]    Script Date: 1/1/2026 9:14:28 PM ******/
     SET ANSI_NULLS ON
     GO
     SET QUOTED_IDENTIFIER ON
@@ -167,7 +167,7 @@ CREATE TABLE [dbo].[rooms](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
     ) ON [PRIMARY]
     GO
-/****** Object:  Table [dbo].[services]    Script Date: 1/1/2026 9:01:04 PM ******/
+/****** Object:  Table [dbo].[services]    Script Date: 1/1/2026 9:14:28 PM ******/
     SET ANSI_NULLS ON
     GO
     SET QUOTED_IDENTIFIER ON
@@ -183,31 +183,73 @@ CREATE TABLE [dbo].[services](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
     ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
     GO
-/****** Object:  Index [FK_PET_TICKET_idx]    Script Date: 1/1/2026 9:01:04 PM ******/
+    SET IDENTITY_INSERT [dbo].[bookings] ON
+    GO
+    INSERT [dbo].[bookings] ([id], [service_id], [room_id], [pet_id], [createTime], [endTime], [note]) VALUES (2, 1, 1, 1, NULL, NULL, NULL)
+    GO
+    INSERT [dbo].[bookings] ([id], [service_id], [room_id], [pet_id], [createTime], [endTime], [note]) VALUES (4, 3, 2, 1, CAST(N'2026-01-01T20:48:46.020' AS DateTime), NULL, N'thit cho 7 mon')
+    GO
+    SET IDENTITY_INSERT [dbo].[bookings] OFF
+    GO
+    SET IDENTITY_INSERT [dbo].[customers] ON
+    GO
+    INSERT [dbo].[customers] ([id], [name], [phoneNumber]) VALUES (1, N'Nam', N'0123456789')
+    GO
+    INSERT [dbo].[customers] ([id], [name], [phoneNumber]) VALUES (2, N'Giang', N'098321222')
+    GO
+    SET IDENTITY_INSERT [dbo].[customers] OFF
+    GO
+    SET IDENTITY_INSERT [dbo].[pets] ON
+    GO
+    INSERT [dbo].[pets] ([id], [name], [breed], [gender], [healthStatus], [customer_id], [age]) VALUES (1, N'kiki', N'dog', N'cai', N'Khoe', 1, NULL)
+    GO
+    INSERT [dbo].[pets] ([id], [name], [breed], [gender], [healthStatus], [customer_id], [age]) VALUES (2, N'Gold', N'dog', N'duc', N'khoe', 2, NULL)
+    GO
+    SET IDENTITY_INSERT [dbo].[pets] OFF
+    GO
+    SET IDENTITY_INSERT [dbo].[rooms] ON
+    GO
+    INSERT [dbo].[rooms] ([id], [name], [status]) VALUES (1, N'phong 1', N'TRONG')
+    GO
+    INSERT [dbo].[rooms] ([id], [name], [status]) VALUES (2, N'phong 2', N'DANG_SU_DUNG')
+    GO
+    SET IDENTITY_INSERT [dbo].[rooms] OFF
+    GO
+    SET IDENTITY_INSERT [dbo].[services] ON
+    GO
+    INSERT [dbo].[services] ([id], [name], [description], [price]) VALUES (1, N'TAM_SAY_CO_BAN', N'tắm massage thư giãn – vắt tuyến hôi – sấy khô phồng lông.', 360000)
+    GO
+    INSERT [dbo].[services] ([id], [name], [description], [price]) VALUES (2, N'COMBO_SPA_9', N'cắt – mài móng, cạo lông lòng bàn chân, cạo lông bụng – vùng vệ sinh, chải lông chết gỡ rối, vệ sinh tai lần 1, tắm massage thư giãn – vắt tuyến hôi, sấy khô – chải phồng lông, vệ sinh tai lần 2, thoa lotion dưỡng lông mềm mại.', 500000)
+    GO
+    INSERT [dbo].[services] ([id], [name], [description], [price]) VALUES (3, N'CAT_TIA_TAO_KIEU', N'gồm combo spa 9 bước thơm tho và cắt tỉa – tạo kiểu theo yêu cầu hoặc theo hiện trạng lông của các bé', 999000)
+    GO
+    SET IDENTITY_INSERT [dbo].[services] OFF
+    GO
+/****** Object:  Index [FK_PET_TICKET_idx]    Script Date: 1/1/2026 9:14:28 PM ******/
 CREATE NONCLUSTERED INDEX [FK_PET_TICKET_idx] ON [dbo].[bookings]
 (
 	[pet_id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
-/****** Object:  Index [room_fk_idx]    Script Date: 1/1/2026 9:01:04 PM ******/
+/****** Object:  Index [room_fk_idx]    Script Date: 1/1/2026 9:14:28 PM ******/
 CREATE NONCLUSTERED INDEX [room_fk_idx] ON [dbo].[bookings]
 (
 	[room_id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
-/****** Object:  Index [service_fk_idx]    Script Date: 1/1/2026 9:01:04 PM ******/
+/****** Object:  Index [service_fk_idx]    Script Date: 1/1/2026 9:14:28 PM ******/
 CREATE NONCLUSTERED INDEX [service_fk_idx] ON [dbo].[bookings]
 (
 	[service_id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
-/****** Object:  Index [FK_INVOICE_TICKET_idx]    Script Date: 1/1/2026 9:01:04 PM ******/
+/****** Object:  Index [FK_INVOICE_TICKET_idx]    Script Date: 1/1/2026 9:14:28 PM ******/
 CREATE NONCLUSTERED INDEX [FK_INVOICE_TICKET_idx] ON [dbo].[invoices]
 (
 	[ticket_id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
-/****** Object:  Index [FK_pet_customer_idx]    Script Date: 1/1/2026 9:01:04 PM ******/
+/****** Object:  Index [FK_pet_customer_idx]    Script Date: 1/1/2026 9:14:28 PM ******/
 CREATE NONCLUSTERED INDEX [FK_pet_customer_idx] ON [dbo].[pets]
 (
 	[customer_id] ASC
