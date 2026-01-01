@@ -7,6 +7,15 @@ public class Pet {
     private String gender;
     private String healthStatus;
     private long CustomerId;
+    private int age;
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
 
     public long getId() {
         return id;
