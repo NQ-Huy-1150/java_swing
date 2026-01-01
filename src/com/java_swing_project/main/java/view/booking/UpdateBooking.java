@@ -2,9 +2,19 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
-package com.nguyenhuy.javaswingui;
+package com.java_swing_project.main.java.view.booking;
 
-import com.nguyenhuy.javaswingui.view.*;
+
+import com.java_swing_project.main.java.domain.*;
+import com.java_swing_project.main.java.service.BookingService;
+import com.java_swing_project.main.java.service.PetService;
+import com.java_swing_project.main.java.service.RoomService;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
 /**
  *
@@ -13,15 +23,91 @@ import com.nguyenhuy.javaswingui.view.*;
 public class UpdateBooking extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(UpdateBooking.class.getName());
-
+    private Booking booking;
+    private Service service;
+    private final BookingService bookingService;
+    private final RoomService roomService;
+    private final PetService petService;
     /**
      * Creates new form CreateBooking
      */
-    public UpdateBooking() {
+    public UpdateBooking(long id) {
+        bookingService = new BookingService();
+        roomService = new RoomService();
+        petService = new PetService();
+        //view setting
         setSize(500,500);
         setVisible(true);
         setTitle("Update Booking");
         initComponents();
+
+        // lay booking va service tuong ung
+        booking = this.bookingService.getBookingById(id);
+        Service currentService = this.bookingService.getServiceById(booking.getServiceId());
+
+        // fix cung du lieu
+        // todo: fix lại logic khi có customer và pet view
+        Customer customer = new Customer();
+        customer.setId(1);
+        customer.setName("Nam");
+
+        // get view data
+        Room currentRoom = this.roomService.getRoomById(booking.getRoomId());
+        System.out.println(currentRoom);
+        Pet pet = petService.findPetById(booking.getPetId());
+
+        // render len view
+        serviceComboBox.setSelectedItem(currentService.getName());
+        serviceDetailArea.setText(currentService.getDescription());
+        noteArea.setText(booking.getNote());
+        petNameField.setText(pet.getName());
+        customerNameField.setText(customer.getName());
+        roomComboBox.setSelectedItem(currentRoom.getName());
+
+        // dat lai status cho phong hien tai
+        currentRoom.setStatus("TRONG");
+        roomService.UpdateRoomById(currentRoom.getId(), currentRoom.getStatus());
+
+        // logic combo box
+        serviceComboBox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    String item =(String) serviceComboBox.getSelectedItem();
+                    service = bookingService.getServiceByName(item);
+                    System.out.println(service);
+                    serviceDetailArea.setText(service.getDescription());
+                }
+            }
+        });
+
+        submitBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Room room = roomService.findRoomByName((String) roomComboBox.getSelectedItem());
+                System.out.println(room);
+
+                // neu phong trong
+                if (room.getStatus().equals("TRONG")) {
+
+                    booking.setServiceId(service.getId());
+                    booking.setRoomId(room.getId());
+                    booking.setNote(noteArea.getText());
+
+                    // cap nhat booking
+                    bookingService.getUpdateBooking(booking);
+
+                    // cap nhat status cua phong
+                    room.setStatus("DANG_SU_DUNG");
+                    roomService.UpdateRoomById(room.getId(), room.getStatus());
+
+                    dispose();
+
+                } else JOptionPane.showMessageDialog(roomComboBox, "Phòng hiện tại không khả dụng." +
+                        " Vui lòng chọn phòng khác !");
+
+            }
+        });
         
     }
 
@@ -50,7 +136,7 @@ public class UpdateBooking extends javax.swing.JFrame {
         jLabel6 = new javax.swing.JLabel();
         roomComboBox = new javax.swing.JComboBox<>();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
 
         customerNameField.setEnabled(false);
         customerNameField.addActionListener(this::customerNameFieldActionPerformed);
@@ -210,7 +296,7 @@ public class UpdateBooking extends javax.swing.JFrame {
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> new UpdateBooking().setVisible(true));
+//        java.awt.EventQueue.invokeLater(() -> new UpdateBooking().setVisible(true));
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

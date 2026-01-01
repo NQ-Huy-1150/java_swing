@@ -5,6 +5,14 @@ public class Room {
     private String name;
     private String Status;
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public long getId() {
         return id;
     }

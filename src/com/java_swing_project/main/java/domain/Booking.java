@@ -4,8 +4,26 @@ public class Booking {
     private long id;
     private long serviceId;
     private long roomId;
+    private long petId;
     private String createTime;
     private String endTime;
+    private String note;
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
+
+    public long getPetId() {
+        return petId;
+    }
+
+    public void setPetId(long petId) {
+        this.petId = petId;
+    }
 
     public long getId() {
         return id;

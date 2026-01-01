@@ -2,9 +2,16 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
-package com.java_swing_project.main.java.view;
+package com.java_swing_project.main.java.view.booking;
 
+import com.java_swing_project.main.java.domain.Booking;
+import com.java_swing_project.main.java.service.BookingService;
+
+import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.List;
 
 /**
  *
@@ -13,19 +20,99 @@ import javax.swing.table.DefaultTableModel;
 public class BookingTable extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(BookingTable.class.getName());
-
+    private BookingService bookingService;
     /**
      * Creates new form BookingTable
      */
     public BookingTable() {
+        bookingService = new BookingService();
         initComponents();
-        setSize(700,400);
+        setSize(700,500);
         setVisible(true);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        String[] columns = {"id", "pet_id", "service_id", "Create Time", "End Time", "Note"};
+        String[] columns = {"Id", "Pet id", "Service id","Room id", "Create Time", "End Time", "Note"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
+        List<Booking> bookings = this.bookingService.getAllBookingFromDb();
+
+        for (Booking bk : bookings) {
+            model.addRow(new Object[] {bk.getId(),bk.getPetId(),bk.getServiceId(),
+                    bk.getRoomId(), bk.getCreateTime(),bk.getEndTime(), bk.getNote()});
+        }
         booking_table.setModel(model);
+
+        reloadBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String[] columns = {"Id", "Pet id", "Service id","Room id", "Create Time", "End Time", "Note"};
+                DefaultTableModel model = new DefaultTableModel(columns, 0);
+                List<Booking> bookings = bookingService.getAllBookingFromDb();
+
+                for (Booking bk : bookings) {
+                    System.out.println(bk);
+                    model.addRow(new Object[] {bk.getId(),bk.getPetId(),bk.getServiceId(),
+                            bk.getRoomId(), bk.getCreateTime(),bk.getEndTime(), bk.getNote()});
+                }
+                booking_table.setModel(model);
+            }
+        });
+
+        deleteBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int row = booking_table.getSelectedRow();
+                if (row == -1) {
+                    JOptionPane.showMessageDialog(booking_table, "Vui long chon booking truoc !");
+                } else {
+                    int confirm = JOptionPane.showConfirmDialog(booking_table, "Ban chac chan muon xoa khong !");
+
+                    if (confirm == JOptionPane.YES_OPTION) {
+                        int id = Integer.valueOf(String.valueOf(booking_table.getValueAt(booking_table.getSelectedRow(), 0)));
+                        System.out.println(id);
+                        bookingService.getBookingDelete(id);
+                    }
+                }
+            }
+        });
+
+        updateBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // todo : wait for pet table
+                int row = booking_table.getSelectedRow();
+                if (row == -1) {
+                    JOptionPane.showMessageDialog(booking_table, "Vui long chon booking truoc !");
+                } else {
+                    int id = Integer.valueOf(String.valueOf(booking_table.getValueAt(booking_table.getSelectedRow(), 0)));
+                    System.out.println(id);
+                    new UpdateBooking(id);
+                }
+            }
+        });
+
+        goBackBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                //todo : wait for dashboad
+            }
+        });
+
+        createBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                //todo : wait for invoice Table
+                int row = booking_table.getSelectedRow();
+                if (row == -1) {
+                    JOptionPane.showMessageDialog(booking_table, "Vui long chon booking truoc !");
+                } else {
+                    int id = Integer.valueOf(String.valueOf(booking_table.getValueAt(booking_table.getSelectedRow(), 0)));
+                    System.out.println(id);
+                }
+            }
+        });
+
+
     }
+
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -62,7 +149,7 @@ public class BookingTable extends javax.swing.JFrame {
         reloadBtn.setText("Reload");
         reloadBtn.addActionListener(this::reloadBtnActionPerformed);
 
-        createBtn.setText("Create");
+        createBtn.setText("Create invoice");
         createBtn.addActionListener(this::createBtnActionPerformed);
 
         updateBtn.setText("Update");
@@ -83,13 +170,13 @@ public class BookingTable extends javax.swing.JFrame {
                     .addComponent(jScrollPane1)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(reloadBtn)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 50, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 42, Short.MAX_VALUE)
                         .addComponent(createBtn)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 50, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 42, Short.MAX_VALUE)
                         .addComponent(updateBtn)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 50, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 42, Short.MAX_VALUE)
                         .addComponent(deleteBtn)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 50, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 42, Short.MAX_VALUE)
                         .addComponent(goBackBtn)))
                 .addContainerGap())
         );
@@ -133,7 +220,12 @@ public class BookingTable extends javax.swing.JFrame {
      */
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
-        
+        try {
+            // Thiết lập giao diện giống hệ điều hành đang chạy
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> new BookingTable().setVisible(true));
     }
