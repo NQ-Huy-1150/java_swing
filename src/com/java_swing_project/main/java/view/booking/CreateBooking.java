@@ -4,97 +4,181 @@
  */
 package com.java_swing_project.main.java.view.booking;
 
-import com.java_swing_project.main.java.domain.*;
-import com.java_swing_project.main.java.service.BookingService;
-import com.java_swing_project.main.java.service.RoomService;
-import com.mysql.cj.x.protobuf.MysqlxCrud;
+import com.java_swing_project.main.java.repository.MssSQLConnection;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+import java.sql.*;
+
 /**
  *
  * @author huy
  */
 public class CreateBooking extends javax.swing.JFrame {
-    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(CreateBooking.class.getName());
-    private BookingService bookingService;
-    private RoomService roomService;
-    private Service service;
-    private Customer customer;
-    private Pet pet;
+    private final MssSQLConnection mssSQLConnection;
+    private Object[] service; // [id, name, description, price]
+    private final Object[] customer; // [id, name, phoneNumber]
+    private final Object[] pet; // [id, name, breed, gender, customer_id, healthStatus]
+
     /**
      * Creates new form CreateBooking
      */
-    public CreateBooking() {
-        pet = new Pet();
-        customer = new Customer();
+    public CreateBooking(long id) {
+        mssSQLConnection = new MssSQLConnection();
 
-        bookingService = new BookingService();
-        roomService = new RoomService();
+        pet = findPetById(id);
+        customer = findCustomerById((long) pet[4]); // customer_id
+
         setSize(500,500);
         setVisible(true);
         setTitle("Booking");
         initComponents();
-        service = new Service();
         serviceDetailArea.setLineWrap(true);
 
-        // fix cung du lieu
-
-        pet.setId(1);
-        pet.setName("kiki");
-        customer.setId(1);
-        customer.setName("Nam");
-
         // render len view
-        customerNameField.setText(customer.getName());
-        petNameField.setText(pet.getName());
+        customerNameField.setText((String) customer[1]); // name
+        petNameField.setText((String) pet[1]); // name
 
-
-        serviceComboBox.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                if (e.getStateChange() == ItemEvent.SELECTED) {
-                    String item =(String) serviceComboBox.getSelectedItem();
-                    service = bookingService.getServiceByName(item);
-                    System.out.println(service);
-                    serviceDetailArea.setText(service.getDescription());
-                }
+        serviceComboBox.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                String item = (String) serviceComboBox.getSelectedItem();
+                service = getServiceByName(item);
+                System.out.println(service);
+                serviceDetailArea.setText(service[2] + "\n" + "Price : " + service[3]);
             }
         });
 
-        submitBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Room room = roomService.findRoomByName((String) roomComboBox.getSelectedItem());
-                System.out.println(room);
+        submitBtn.addActionListener(e -> {
+            Object[] room = findRoomByName((String) roomComboBox.getSelectedItem());
+            System.out.println(room);
 
-                // neu phong trong
-                if (room.getStatus().equals("TRONG")) {
+            // neu phong trong
+            if (room != null && "TRONG".equals(room[2])) {
 
-                    Booking booking = new Booking();
-                    booking.setPetId(pet.getId());
-                    booking.setServiceId(service.getId());
-                    booking.setRoomId(room.getId());
-                    booking.setNote(noteArea.getText());
+                long petId = (long) pet[0];
+                long serviceId = (long) service[0];
+                long roomId = (long) room[0];
+                String note = noteArea.getText();
 
-                    // tao booking
-                    bookingService.CreateNewBooking(booking);
+                // tao booking
+                createNewBooking(petId, serviceId, roomId, note);
 
-                    // cap nhat status cua phong
-                    room.setStatus("DANG_SU_DUNG");
-                    roomService.UpdateRoomById(room.getId(), room.getStatus());
+                // cap nhat status cua phong
+                updateRoomStatus(roomId, "DANG_SU_DUNG");
+                dispose();
 
-
-                } else JOptionPane.showMessageDialog(roomComboBox, "Phòng hiện tại không khả dụng." +
-                        " Vui lòng chọn phòng khác !");
+            } else {
+                JOptionPane.showMessageDialog(roomComboBox, "Phòng hiện tại không khả dụng. Vui lòng chọn phòng khác!");
             }
         });
     }
 
-    /**
+    // SQL Methods - xử lý trực tiếp database
+
+    private Object[] findPetById(long id) {
+        Object[] pet = null;
+        try (Connection conn = mssSQLConnection.dbConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM pets WHERE id = " + id)) {
+
+            if (rs.next()) {
+                pet = new Object[6]; // [id, name, breed, gender, customer_id, healthStatus]
+                pet[0] = rs.getLong("id");
+                pet[1] = rs.getString("name");
+                pet[2] = rs.getString("breed");
+                pet[3] = rs.getString("gender");
+                pet[4] = rs.getLong("customer_id");
+                pet[5] = rs.getString("healthStatus");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return pet;
+    }
+
+    private Object[] findCustomerById(long id) {
+        Object[] customer = null;
+        try (Connection conn = mssSQLConnection.dbConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM customers WHERE id = " + id)) {
+
+            if (rs.next()) {
+                customer = new Object[3]; // [id, name, phoneNumber]
+                customer[0] = rs.getLong("ID");
+                customer[1] = rs.getString("NAME");
+                customer[2] = rs.getString("phoneNumber");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return customer;
+    }
+
+    private Object[] getServiceByName(String name) {
+        Object[] service = null;
+        try (Connection conn = mssSQLConnection.dbConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT * FROM services WHERE name = ?")) {
+            ps.setString(1, name);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                service = new Object[4]; // [id, name, description, price]
+                service[0] = rs.getLong("id");
+                service[1] = rs.getString("name");
+                service[2] = rs.getString("description");
+                service[3] = rs.getDouble("price");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return service;
+    }
+
+    private Object[] findRoomByName(String name) {
+        Object[] room = null;
+        try (Connection conn = mssSQLConnection.dbConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM rooms WHERE name = '" + name + "'")) {
+
+            if (rs.next()) {
+                room = new Object[3]; // [id, name, status]
+                room[0] = rs.getLong("id");
+                room[1] = rs.getString("name");
+                String status = rs.getString("status");
+                room[2] = status == null ? "TRONG" : status;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return room;
+    }
+
+    private void createNewBooking(long petId, long serviceId, long roomId, String note) {
+        try (Connection conn = mssSQLConnection.dbConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "INSERT INTO bookings (pet_id, service_id, room_id, note, createTime, endTime) VALUES (?, ?, ?, ?, ?, ?)")) {
+            ps.setLong(1, petId);
+            ps.setLong(2, serviceId);
+            ps.setLong(3, roomId);
+            ps.setString(4, note);
+            ps.setTimestamp(5, new Timestamp(System.currentTimeMillis()));
+            ps.setTimestamp(6, null);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateRoomStatus(long roomId, String status) {
+        try (Connection conn = mssSQLConnection.dbConnection();
+             PreparedStatement ps = conn.prepareStatement("UPDATE rooms SET status = ? WHERE id = ?")) {
+            ps.setString(1, status);
+            ps.setLong(2, roomId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }    /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
      * regenerated by the Form Editor.
@@ -119,7 +203,6 @@ public class CreateBooking extends javax.swing.JFrame {
         jLabel6 = new javax.swing.JLabel();
         roomComboBox = new javax.swing.JComboBox<>();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         customerNameField.setEnabled(false);
 
@@ -152,7 +235,19 @@ public class CreateBooking extends javax.swing.JFrame {
 
         jLabel6.setText("Chọn phòng :");
 
-        roomComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "None", "phong 1", "phong 2", " " }));
+        roomComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "None",
+                "phong 1",
+                "phong 2",
+                "phong 3",
+                "phong 4",
+                "phong 5",
+                "phong 6",
+                "phong 7",
+                "phong 8",
+                "phong 9",
+                "phong 10",
+                "phong 11",
+                "phong 12" }));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -246,7 +341,7 @@ public class CreateBooking extends javax.swing.JFrame {
 
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> new CreateBooking().setVisible(true));
+
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
