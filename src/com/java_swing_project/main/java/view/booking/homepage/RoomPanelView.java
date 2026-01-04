@@ -5,61 +5,60 @@ import com.java_swing_project.main.java.repository.MssSQLConnection;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class RoomPanelView {
     private final MssSQLConnection mssSQLConnection;
     private final JTable roomTable;
     private final DefaultTableModel roomModel;
-    private final String[] COLUMN_NAMES = {"Id", "Tên phòng", "Trạng thái phòng"};
+
+    private static final String[] COLUMN_NAMES = {"Id", "Tên phòng", "Trạng thái phòng"};
 
     public RoomPanelView(MssSQLConnection mssSQLConnection, JTable roomTable) {
         this.mssSQLConnection = mssSQLConnection;
         this.roomTable = roomTable;
-        this.roomModel = new DefaultTableModel(COLUMN_NAMES, 0);
+
+        // Khóa edit trên table
+        this.roomModel = new DefaultTableModel(COLUMN_NAMES, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
 
         initializeRoomPanel();
     }
 
     private void initializeRoomPanel() {
-        loadRoomData();
         roomTable.setModel(roomModel);
+        loadRoomData();
     }
 
     public void loadRoomData() {
         roomModel.setRowCount(0);
-        List<Object[]> rooms = getAllRoom();
 
-        for (Object[] room : rooms) {
-            roomModel.addRow(new Object[]{room[0], room[1], room[2]});
-        }
-    }
-
-
-    public void reloadRoomTable() {
-        loadRoomData();
-    }
-
-    // SQL Methods - xử lý trực tiếp database
-
-    private List<Object[]> getAllRoom() {
-        List<Object[]> rooms = new ArrayList<>();
+        String sql = "SELECT id, name, status FROM rooms ORDER BY id";
         try (Connection conn = mssSQLConnection.dbConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT * FROM rooms")) {
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                Object[] room = new Object[3]; // [id, name, status]
-                room[0] = rs.getLong("id");
-                room[1] = rs.getString("name");
-                room[2] = rs.getString("status");
-                rooms.add(room);
+                long id = rs.getLong("id");
+                String name = rs.getString("name");
+                String status = rs.getString("status");
+
+                // Đồng bộ logic: status null -> TRONG
+                if (status == null) status = "TRONG";
+
+                // Dùng đúng pattern của Swing table model
+                roomModel.addRow(new Object[]{id, name, status});
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return rooms;
+    }
+
+    public void reloadRoomTable() {
+        loadRoomData();
     }
 
     public JTable getRoomTable() {
@@ -69,7 +68,4 @@ public class RoomPanelView {
     public DefaultTableModel getRoomModel() {
         return roomModel;
     }
-
-
 }
-
