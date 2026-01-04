@@ -1,7 +1,6 @@
 package com.java_swing_project.main.java.view.booking.homepage;
 
 import com.java_swing_project.main.java.repository.MssSQLConnection;
-import com.java_swing_project.main.java.view.booking.CreateBooking;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,7 +11,7 @@ import java.sql.*;
 public class MainFrame2 {
     private JPanel MainFrame;
     private JPanel PanelButtom;
-    private JButton butcus;
+    private JButton butcustomer;
     private JButton buthoadon;
     private JButton butpet;
     private JButton butbooking;
@@ -78,7 +77,7 @@ public class MainFrame2 {
     //Tạo kết nối
     private final MssSQLConnection mssSQLConnection;
 
-    // Panel views
+    // Khởi tạo bến cho các class xử lý views
     private CustomerPanelView customerPanelView;
     private PetPanelView petPanelView;
     private BookingPanelView bookingPanelView;
@@ -87,12 +86,15 @@ public class MainFrame2 {
     private StatPanelView statPanelView;
     //
 
+    //Constructor MainFrame
     public MainFrame2() throws SQLException {
-        //tạo kêts noi
+        //Tạo Kết Nối
         mssSQLConnection = new MssSQLConnection();
 
-
+        //Tạo frame
         JFrame frame = new JFrame();
+
+        //Set lookandfeel giao diện windows
         try {
             UIManager.setLookAndFeel(
                     "com.sun.java.swing.plaf.windows.WindowsLookAndFeel"
@@ -107,7 +109,7 @@ public class MainFrame2 {
         frame.setContentPane(MainFrame);
         cardLayout = (CardLayout) PanelData.getLayout();
 
-        // Initialize panel views
+        // Truyen du lieu cho cac bien
         customerPanelView = new CustomerPanelView(mssSQLConnection, scronpanelcustomer,
                 textField1, textField2, textField3);
         petPanelView = new PetPanelView(mssSQLConnection, scrollPanePet,
@@ -118,17 +120,13 @@ public class MainFrame2 {
         invoicePanelView = new InvoicePanelView(mssSQLConnection,invoiceScrollPane);
         statPanelView = new StatPanelView(mssSQLConnection, totalCustomer, totalPet, totalInvoiec);
 
+        //Xu ly su kien cac nut trong frame chính
 
-
-        // Load initial data
-        customerPanelView.loadData();
-        petPanelView.loadData();
-
-
-        butcus.addActionListener(new ActionListener() {
+        butcustomer.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 cardLayout.show(PanelData, "Card1");
+                customerPanelView.loadData();
             }
         });
         butpet.addActionListener(new ActionListener() {
@@ -174,9 +172,9 @@ public class MainFrame2 {
         });
 
 
-        //Xử lý button
+        //Xử lý button ở các cardlayout
 
-        //button panel customer
+        //1.Button Cardlayout customer
 
         addButton.addActionListener(e -> customerPanelView.addCustomer());
         clearButton.addActionListener(e -> customerPanelView.clearFields());
@@ -202,14 +200,15 @@ public class MainFrame2 {
             }
         });
 
-        //button panel pet
+        //2.Button Cardlayout Pet
 
         updatePetBtn.addActionListener(e -> petPanelView.updatePet());
         reloadPetBtn.addActionListener(e -> petPanelView.loadData());
         deletePetBtn.addActionListener(e -> petPanelView.deletePet());
 
 
-        //button panel booking
+        //3.Button Cardlayout Booking
+
         createBookingBtn.addActionListener(e -> {
             long petId = petPanelView.getSelectedPetId();
             if (petId == -1) {
@@ -231,10 +230,12 @@ public class MainFrame2 {
                 bookingPanelView.reloadBookingTable();
             }
         });
-        frame.setVisible(true);
 
-
+        //4.Button Cardlayout Room
         reloadRoomButton.addActionListener(e-> roomPanelView.reloadRoomTable());
+
+
+        //5.Button Cardlayout Invoice
         reloadInvoiceButton.addActionListener(e-> {
             try {
                 invoicePanelView.loaddata();
@@ -253,6 +254,8 @@ public class MainFrame2 {
                 }
             }
         });
+
+        frame.setVisible(true);
     }
 
 

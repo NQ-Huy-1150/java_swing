@@ -20,9 +20,9 @@ public class BookingPanelView {
     private final DefaultTableModel tableModel;
 
 
-    // lưu id của phòng đang sửa : chưa chọn = -1
+    // todo: set giá trị mặc định cho flag
     private long currentEditingBookingId = -1;
-    private long currentEditingRoomId = -1; // Để check logic đổi phòng
+    private long currentEditingRoomId = -1;
 
     public BookingPanelView(MssSQLConnection mssSQLConnection,
                             JTable booking_table, JComboBox<String> serviceComboBox, JComboBox<String> roomComboBox,
@@ -79,12 +79,13 @@ public class BookingPanelView {
     }
 
 
-
+    // Load lại bảng
     public void reloadBookingTable() {
         loadAllBookingsToTable();
         clearForm();
     }
-
+    //todo: tạo các hàm tương ứng với CRUD : thêm, sửa, xoá
+    // xoá bảng
     public void deleteBooking() {
         int selectedRow = booking_table.getSelectedRow();
         if (selectedRow == -1) {
@@ -104,7 +105,7 @@ public class BookingPanelView {
             }
         }
     }
-
+    // cập nhật
     public void updateBooking() {
         int selectedRow = booking_table.getSelectedRow();
         if (selectedRow == -1) {
@@ -128,8 +129,6 @@ public class BookingPanelView {
                         this.currentEditingBookingId = rs.getLong("id");
                         this.currentEditingRoomId = rs.getLong("room_id");
                         long serviceId = rs.getLong("service_id");
-
-
                         String note = rs.getString("note");
 
                         // render data len combobox
@@ -140,7 +139,7 @@ public class BookingPanelView {
                         roomComboBox.setSelectedItem(roomName);
                         noteArea.setText(note);
 
-                        // Update lại trạng thái phòng cũ thành TRONG (tạm thời) để đổi phòng khác hoặc gán lại
+                        // Chuyển về trạng thái trống tạm thời cho phòng hiện tại
                         updateRoomStatus(this.currentEditingRoomId, "TRONG");
 
                 }
@@ -149,9 +148,9 @@ public class BookingPanelView {
             e.printStackTrace();
         }
     }
-
+    // nút xác nhận
     public void submitBooking() {
-        // Kiểm tra xem đang ở chế độ Sửa hay chưa chọn gì
+        // Kiểm tra lại giá trị của flag
         if (currentEditingBookingId == -1) {
             JOptionPane.showMessageDialog(null, "Chưa chọn booking để xử lý!");
             return;
@@ -161,17 +160,18 @@ public class BookingPanelView {
         String serviceName = (String) serviceComboBox.getSelectedItem();
         String note = noteArea.getText();
 
+        //todo: viết logic xử lý đặt phòng
         if (roomName == null || roomName.equals("None") || serviceName == null || serviceName.equals("None")) {
             JOptionPane.showMessageDialog(null, "Vui lòng chọn đầy đủ Dịch vụ và Phòng!");
             return;
         }
 
-        // 1. Lấy ID của Room và Service từ tên (Biến đơn)
+        // Lấy ID của Room và Service từ combobox
         long selectedRoomId = getRoomIdByName(roomName);
         long selectedServiceId = getServiceIdByName(serviceName);
         String roomStatus = getRoomStatusById(selectedRoomId);
 
-        // 2. Kiểm tra logic phòng: Phải là phòng TRONG hoặc chính là phòng cũ đang dùng
+        // Kiểm tra logic phòng: Phải là phòng "TRONG" hoặc chính là phòng cũ đang dùng
         boolean isRoomAvailable = "TRONG".equals(roomStatus) || (selectedRoomId == currentEditingRoomId);
 
         if (isRoomAvailable) {
@@ -181,7 +181,6 @@ public class BookingPanelView {
             if (success) {
                 // Logic đổi trạng thái phòng:
                 // Nếu đổi sang phòng mới -> set phòng mới thành DANG_SU_DUNG
-                // (Phần set phòng cũ thành TRONG nên xử lý ở trigger DB hoặc logic riêng nếu cần chặt chẽ)
                 updateRoomStatus(selectedRoomId, "DANG_SU_DUNG");
 
                 reloadBookingTable();
@@ -286,8 +285,8 @@ public class BookingPanelView {
                     "Thanh toán",
                     JOptionPane.QUESTION_MESSAGE
             );
-
-            if (input == null) return; // Bấm Cancel -> Thoát ngay, DB chưa bị thay đổi gì cả -> AN TOÀN
+            // nếu huỷ
+            if (input == null) return;
 
             try {
                 long customerMoney = Long.parseLong(input);
@@ -415,6 +414,7 @@ public class BookingPanelView {
         tableModel.setRowCount(0);
 
         // Chỉ lấy những dòng mà endTime chưa có dữ liệu (chưa thanh toán/chưa check-out)
+        // Ẩn đi những dòng đã thanh toán !
         String sql = "SELECT * FROM bookings WHERE endTime IS NULL";
 
         try (Connection conn = mssSQLConnection.dbConnection();

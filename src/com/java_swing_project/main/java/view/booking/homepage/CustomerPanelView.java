@@ -17,6 +17,7 @@ public class CustomerPanelView {
     private JTextField textField2;
     private JTextField textField3;
 
+    //Constructor gán biến và gọi hàm tạo bảng
     public CustomerPanelView(MssSQLConnection mssSQLConnection, JScrollPane scronpanelcustomer,
                              JTextField textField1, JTextField textField2, JTextField textField3) {
         this.mssSQLConnection = mssSQLConnection;
@@ -24,10 +25,10 @@ public class CustomerPanelView {
         this.textField2 = textField2;
         this.textField3 = textField3;
 
-        initializeCustomerTable(scronpanelcustomer);
+        TaoBang(scronpanelcustomer);
     }
-
-    private void initializeCustomerTable(JScrollPane scronpanelcustomer) {
+    //Hàm 1: Tạo bảng
+    private void TaoBang(JScrollPane scronpanelcustomer) {
         modelcus = new DefaultTableModel();
         modelcus.addColumn("ID");
         modelcus.addColumn("Name");
@@ -38,8 +39,9 @@ public class CustomerPanelView {
         scronpanelcustomer.setViewportView(tablecus);
 
         indulieucuslentextield();
+        loadData();
     }
-
+    //Hàm 2: Load lại dữ liệu cho bảng
     public void loadData() {
         try {
             Connection conn = mssSQLConnection.dbConnection();
@@ -72,12 +74,19 @@ public class CustomerPanelView {
             e.printStackTrace();
         }
     }
-
+    //Hàm 3: tìm kiếm khách hàng
     public void searchCustomer() {
-        String[] opt = {"Tên", "SĐT"};
+        String[] luaChon = {"Tên", "SĐT"};
+
         int c = JOptionPane.showOptionDialog(
-                null, "Chọn kiểu tìm", "Tìm khách hàng",
-                0, 3, null, opt, opt[0]
+                null,
+                "Chọn kiểu tìm",
+                "Tìm khách hàng",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                luaChon,
+                null
         );
         if (c == -1) return;
 
@@ -86,12 +95,17 @@ public class CustomerPanelView {
 
         modelcus.setRowCount(0);
 
+        String sql;
+        if (c == 0) {
+            sql = "SELECT *FROM customers WHERE NAME LIKE ?";
+        } else {
+            sql = "SELECT *FROM customers WHERE phoneNumber LIKE ?";
+        }
+
         try {
             Connection conn = mssSQLConnection.dbConnection();
-            PreparedStatement ps = conn.prepareStatement(
-                    "SELECT * FROM customers WHERE " +
-                            (c == 0 ? "NAME" : "phoneNumber") + " LIKE ?"
-            );
+            PreparedStatement ps = conn.prepareStatement(sql);
+
             ps.setString(1, "%" + key + "%");
 
             ResultSet rs = ps.executeQuery();
@@ -109,7 +123,7 @@ public class CustomerPanelView {
             e.printStackTrace();
         }
     }
-
+    //Hàm 4 in dữ liệu lên textfield
     private void indulieucuslentextield() {
         tablecus.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
@@ -122,7 +136,7 @@ public class CustomerPanelView {
             }
         });
     }
-
+    //hàm 5 xóa khách hàng
     public void deleteCustomer() {
         int row = tablecus.getSelectedRow();
         if (row == -1) return;
@@ -145,14 +159,14 @@ public class CustomerPanelView {
             e.printStackTrace();
         }
     }
-
+    //Hàm 6 clear data
     public void clearFields() {
         textField1.setText("");
         textField2.setText("");
         textField3.setText("");
         tablecus.clearSelection();
     }
-
+    //Hàm: 7 cập nhật khách hàng
     public void updateCustomer() {
         try {
             long id = Long.parseLong(textField1.getText());
@@ -176,7 +190,7 @@ public class CustomerPanelView {
             e.printStackTrace();
         }
     }
-
+    //Hàm 8: Thêm khách hàng
     public void addCustomer() {
         JTextField nameField = new JTextField();
         JTextField phoneField = new JTextField();
@@ -214,7 +228,7 @@ public class CustomerPanelView {
             e.printStackTrace();
         }
     }
-
+    //Hàm 9: Thêm pet cho khách hàng
     public void addPetFromSelectedCustomer() {
         int row = tablecus.getSelectedRow();
         if (row == -1) {
@@ -253,6 +267,14 @@ public class CustomerPanelView {
             e.printStackTrace();
         }
     }
+    //Hàm 10: lấy id dòng ở bảng người dùng
+    public long getSelectedCustomerId() {
+        int row = tablecus.getSelectedRow();
+        if (row == -1) {
+            return -1;
+        }
+        return (long) modelcus.getValueAt(row, 0);
+    }
 
     public JTable getTablecus() {
         return tablecus;
@@ -262,12 +284,6 @@ public class CustomerPanelView {
         return modelcus;
     }
 
-    public long getSelectedCustomerId() {
-        int row = tablecus.getSelectedRow();
-        if (row == -1) {
-            return -1;
-        }
-        return (long) modelcus.getValueAt(row, 0);
-    }
+
 }
 

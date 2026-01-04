@@ -32,6 +32,7 @@ public class PetPanelView {
         this.healthStatus = healthStatus;
 
         initializePetTable(scrollPanePet);
+        loadData();
     }
 
     private void initializePetTable(JScrollPane scrollPanePet) {
