@@ -46,10 +46,9 @@ public class RoomPanelView {
                 String name = rs.getString("name");
                 String status = rs.getString("status");
 
-                // Đồng bộ logic: status null -> TRONG
+                // hiển thị : status null -> TRONG
                 if (status == null) status = "TRONG";
 
-                // Dùng đúng pattern của Swing table model
                 roomModel.addRow(new Object[]{id, name, status});
             }
         } catch (SQLException e) {

@@ -33,61 +33,64 @@ public class InvoicePanelView {
         loaddata();
     }
 
-    private String baseInvoiceQuery() {
-        // Join thêm bảng services thông qua service_id của bảng bookings
-        return """
-                SELECT
-                    i.id AS invoice_id,
-                    i.booking_id,
-                    p.name AS pet_name,
-                    s.name AS service_name,
-                    i.total
-                FROM invoices i
-                JOIN bookings b ON i.booking_id = b.id
-                JOIN pets p ON b.pet_id = p.id
-                JOIN services s ON b.service_id = s.id
-                """;
-    }
+    // 1. Định nghĩa câu SQL cơ bản
+    private final String SQL_BASE_INVOICE = """
+    SELECT 
+        i.id AS invoice_id, i.booking_id, p.name AS pet_name, 
+        s.name AS service_name, i.total
+    FROM invoices i
+    JOIN bookings b ON i.booking_id = b.id
+    JOIN pets p ON b.pet_id = p.id
+    JOIN services s ON b.service_id = s.id
+    """;
 
-    private void executeAndFillTable(String sql, Object... params) throws SQLException {
+    // 2. Hàm xử lý trung tâm
+    private void fillInvoiceTable(String query, Object... params) {
+        modelinvoice.setRowCount(0); // Reset bảng trước
+
         try (Connection conn = mssSQLConnection.dbConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(query)) {
 
+            // Gán tham số tự động (nếu có)
             for (int i = 0; i < params.length; i++) {
                 ps.setObject(i + 1, params[i]);
             }
 
             try (ResultSet rs = ps.executeQuery()) {
-                modelinvoice.setRowCount(0);
                 while (rs.next()) {
-                    Object[] row = {
+                    modelinvoice.addRow(new Object[]{
                             rs.getLong("invoice_id"),
                             rs.getLong("booking_id"),
                             rs.getString("pet_name"),
                             rs.getString("service_name"),
                             rs.getDouble("total")
-                    };
-                    modelinvoice.addRow(row);
+                    });
                 }
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Lỗi tải dữ liệu: " + e.getMessage());
         }
     }
 
-    public void loaddata() throws SQLException {
-        executeAndFillTable(baseInvoiceQuery());
+    // 3. đổ dữ liệu lên bảng
+    public void loaddata() {
+        fillInvoiceTable(SQL_BASE_INVOICE);
     }
 
+    // 4. Hàm Tìm kiếm
+    public void searchInvoiceByPetName() {
+        String input = JOptionPane.showInputDialog(null, "Nhập tên thú cưng cần tìm:");
 
-    public void searchInvoiceByPetName() throws SQLException {
-        String petName = JOptionPane.showInputDialog(null,"Nhập vào tên pet : ");
-
-        if (petName == null || petName.trim().isEmpty()) {
+        // Nếu không nhập gì hoặc bấm Cancel -> Load lại toàn bộ
+        if (input == null || input.isBlank()) {
             loaddata();
             return;
         }
 
-        String sql = baseInvoiceQuery() + "\nWHERE p.name LIKE ?\nORDER BY i.id DESC";
-        executeAndFillTable(sql, "%" + petName.trim() + "%");
+        // Nếu có nhập -> Nối chuỗi SQL tìm kiếm
+        String searchSql = SQL_BASE_INVOICE + " WHERE p.name LIKE ? ORDER BY i.id DESC";
+        fillInvoiceTable(searchSql, "%" + input.trim() + "%");
     }
 
     private void reloadData() throws SQLException {

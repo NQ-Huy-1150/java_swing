@@ -598,19 +598,20 @@ public class BookingPanelView {
 
     private String getRoomStatusById(long id) {
         String sql = "SELECT status FROM rooms WHERE id = ?";
-        try (Connection conn = mssSQLConnection.dbConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setLong(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    String status = rs.getString("status");
-                    return status == null ? "TRONG" : status;
-                }
+        String status = "";
+        try (Connection conn = mssSQLConnection.dbConnection()){
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setLong(1,id);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                String temp = rs.getString("status");
+                status = temp == null ? "TRONG" : temp;
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return "N";
+        System.out.println(status);
+        return status;
     }
 
     private void updateRoomStatus(long roomId, String status) {

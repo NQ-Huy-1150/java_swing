@@ -164,7 +164,6 @@ public class CustomerPanelView {
         textField1.setText("");
         textField2.setText("");
         textField3.setText("");
-        tablecus.clearSelection();
     }
     //Hàm: 7 cập nhật khách hàng
     public void updateCustomer() {

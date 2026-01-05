@@ -107,6 +107,7 @@ public class MainFrame2 {
         frame.setResizable(false);
         frame.setLocationRelativeTo(null);
         frame.setContentPane(MainFrame);
+        frame.setTitle("Quản lý khách sạn thú cưng");
         cardLayout = (CardLayout) PanelData.getLayout();
 
         // Truyen du lieu cho cac bien
@@ -156,11 +157,7 @@ public class MainFrame2 {
             public void actionPerformed(ActionEvent e) {
 
                 cardLayout.show(PanelData, "Card5");
-                try {
-                    invoicePanelView.loaddata();
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
-                }
+                invoicePanelView.loaddata();
             }
         });
         statBtn.addActionListener(new ActionListener() {
@@ -237,21 +234,13 @@ public class MainFrame2 {
 
         //5.Button Cardlayout Invoice
         reloadInvoiceButton.addActionListener(e-> {
-            try {
-                invoicePanelView.loaddata();
-            } catch (SQLException ex) {
-                throw new RuntimeException(ex);
-            }
+            invoicePanelView.loaddata();
         });
 
         invoiceSearchButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                try {
-                    invoicePanelView.searchInvoiceByPetName();
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
-                }
+                invoicePanelView.searchInvoiceByPetName();
             }
         });
 
